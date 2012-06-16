@@ -95,7 +95,8 @@ if(__name__=='__main__'):
 				admin.start()
 				watcher.start()
 				watcher.join()
-				#admin.join()
+				admin.stop()
 		if(cmd=='QUIT'):
 			break
 	print('Bye~')
+	exit()

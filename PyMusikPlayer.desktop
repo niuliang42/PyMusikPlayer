@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name[zh_CN]=PyMusikPlayer
+Encoding=UTF-8
+Name=PyMusikPlayer
+Comment=一个命令行下的音乐播放器
+Exec=python /home/wizmann/程序/PyMusikPlayer/PyMusikPlayer.py
+Icon=/home/wizmann/程序/PyMusikPlayer/icon.png
+Terminal=true
+Type=Application
+Version=1.0
+Comment[zh_CN]=
+GenericName[zh_CN]=一个命令行下的音乐播放器
