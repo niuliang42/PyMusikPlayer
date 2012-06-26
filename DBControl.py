@@ -3,7 +3,8 @@
 
 import os,sys
 import sqlite3
-import time
+import base64
+from random import randint
 try:
     from hashlib import md5
 except:
@@ -17,7 +18,8 @@ class DBControl():
 		self.cur.execute(\
 			'CREATE TABLE IF NOT EXISTS musik_index\
 			(\
-				key not null,\
+				id INTEGER PRIMARY KEY AUTOINCREMENT,\
+				key not null UNIQUE,\
 				path not null\
 			);')
 		self.db.commit()
@@ -28,7 +30,12 @@ class DBControl():
 		md5x.update(i_path)
 		encode_path=md5x.hexdigest()[8:-8]
 		encode_path='T_'+encode_path
-		print self.table_exists(encode_path)
+		
+		try:
+			self.insertIntoIndex(i_path,encode_path)
+		except:
+			print 'Musik Path:'+i_path+' is already in the index.'
+		#print self.table_exists(encode_path)
 		if(force):
 			if(self.table_exists(encode_path)):
 				self.drop_table(encode_path)
@@ -43,6 +50,8 @@ class DBControl():
 				ext=item.split('.')[-1]
 				if(ext in ['mp3']):
 					self.insertDB(encode_path,root+'/'+item)
+		self.db.commit()
+		self.cur.close()
 		print 'Add_new_path OK!'
 		
 	def create_table(self,table_name):
@@ -70,21 +79,57 @@ class DBControl():
 		self.cur.close()
 		return True if num>0 else False
 		
-	def insertDB(self,table_name,value):
+	def insertIntoIndex(self,table_path,table_hash):
+		table_path_base64=base64.encodestring(table_path)[:-1]
 		self.cur=self.db.cursor()
-		self.cur.execute('INSERT INTO '+ '\"' +table_name + '\"' + ' (musik_path) VALUES \n'+'(\"'+value+'\");')
+		self.cur.execute('INSERT INTO musik_index (key,path) VALUES ('+ "\""+table_hash+"\", "+"\""+table_path_base64+"\");")
 		self.db.commit()
 		self.cur.close()
-	 
+		
+		
+	def insertDB(self,table_name,value):
+		value=base64.encodestring(value)
+		self.cur=self.db.cursor()
+		self.cur.execute('INSERT INTO '+ '\"' +table_name + '\"' + ' (musik_path) VALUES '+'(\"'+value+'\");')
+	
+	def sync_view(self):
+		self.cur=self.db.cursor()
+		self.cur.execute('Drop View If Exists musik_view;')
+		self.db.commit()
+		
+		self.cur.execute('Select * From musik_index')
+		musik_index=self.cur.fetchall()
+		
+		command = 'Create View musik_view As\n'
+		flag_first=True
+		
+		for item in musik_index:
+			print item[1]
+			if(flag_first): flag_first=False
+			else:
+				command+='\n Union All\n'
+			command += 'Select * from '+item[1]
+		command+=';'
+		#print command
+		self.cur.execute(command)
+		self.cur.close()
+	
+	def fetch_random_one(self):
+		self.cur=self.db.cursor()
+		self.cur.execute("Select Count(*) from musik_view;")
+		musik_num=int(self.cur.fetchone()[0])
+		ptr=randint(0,musik_num-1)
+		self.cur.execute("Select * from musik_view limit 1 offset "+str(ptr)+'; ')
+		musik_name=self.cur.fetchone()[0]
+		self.cur.close()
+		return base64.decodestring(musik_name)
+	
 	def __del__(self):
 		self.db.close()
 
 
 if(__name__=='__main__'):
 	db=DBControl()
-	db.add_new_path('/home/wizmann/音乐/B',force=True)
-	db.add_new_path('/home/wizmann/音乐/A',force=True)
-	
-	db.create_all_view()
-	
-
+	#db.add_new_path('/media/sda2/Musik',force=True)
+	#db.sync_view()
+	print db.fetch_random_one()

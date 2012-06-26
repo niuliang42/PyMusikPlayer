@@ -8,6 +8,7 @@ import threading
 import tty,termios
 import signal
 import subprocess
+from DBControl import DBControl
 
 cmd=''
 
@@ -71,17 +72,12 @@ class MrAdmin(threading.Thread):
 
 if(__name__=='__main__'):
 	pygame.init()
-	music_list=[]
-	for root,dirs,files in os.walk('/media/sda2/Musik'):
-			for item in files:
-				ext=item.split('.')[-1]
-				if(ext in ['mp3']):
-					music_list.append(root+'/'+item)
 	status=''
+	db=DBControl()
 	while True:
 		if pygame.mixer.music.get_busy() == False:
 			os.system('clear')
-			music=random.choice(music_list)
+			music=db.fetch_random_one()
 			music_info=music.split('/')
 			sys.stdout.write("Now Playing...\r\n")
 			sys.stdout.write("%s\r\n" % music_info[-3])
