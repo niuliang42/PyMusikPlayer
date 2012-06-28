@@ -48,7 +48,7 @@ class DBControl():
 		for root,dirs,files in os.walk(i_path):
 			for item in files:
 				ext=item.split('.')[-1]
-				if(ext in ['mp3']):
+				if(ext in ['mp3','m4a','wma','aac']):
 					self.insertDB(encode_path,root+'/'+item)
 		self.db.commit()
 		self.cur.close()
@@ -130,6 +130,6 @@ class DBControl():
 
 if(__name__=='__main__'):
 	db=DBControl()
-	#db.add_new_path('/media/sda2/Musik',force=True)
-	#db.sync_view()
-	print db.fetch_random_one()
+	db.add_new_path('/media/sda2/Musik',force=True)
+	db.sync_view()
+	#print db.fetch_random_one()
